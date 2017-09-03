@@ -1,5 +1,6 @@
 package luca.read.com;
 
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -35,12 +36,16 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText edtSpeed;
     private EditText edtFontSize;
+    private TextView tvStatus;
 
     private ScrollView svContent;
 
+    private long lStartTime = 0;
+    private long lBestTime = 0;
+    private int nType = 0;
+
     private static int SCROLL_INTERVAL = 20;
     private static int nSpeed = 10;
-
     private static int nFontSize = 18;
 
     Handler handler = new Handler();
@@ -53,6 +58,14 @@ public class MainActivity extends AppCompatActivity {
 
             // if diff is zero, then the bottom has been reached
             if (diff <= 0) {
+                long lElapsedTime = System.currentTimeMillis() - lStartTime;
+
+                if (lBestTime == 0 || lElapsedTime < lBestTime) {
+                    lBestTime = lElapsedTime;
+                    saveBestTime(nType, lBestTime);
+                }
+
+                updateStatus(nSpeed, (int)(lElapsedTime / 1000), (int)(lBestTime / 1000));
                 handler.removeMessages(0);
                 Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
@@ -85,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         edtSpeed = (EditText) findViewById(R.id.edt_speed);
         edtFontSize = (EditText) findViewById(R.id.edt_font_size);
+        tvStatus = (TextView) findViewById(R.id.tv_status);
 
         svContent = (ScrollView) findViewById(R.id.sv_content);
         tvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
@@ -95,6 +109,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 svContent.scrollTo(0, 0);
+                nType = 0;
+                lBestTime = getBestTime(nType);
+                updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Tehillim.txt");
             }
         });
@@ -104,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 svContent.scrollTo(0, 0);
+                nType = 1;
+                lBestTime = getBestTime(nType);
+                updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Hatikun.txt");
             }
         });
@@ -113,6 +133,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 svContent.scrollTo(0, 0);
+                nType = 2;
+                lBestTime = getBestTime(nType);
+                updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Parashat.txt");
             }
         });
@@ -122,6 +145,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 svContent.scrollTo(0, 0);
+                nType = 3;
+                lBestTime = getBestTime(nType);
+                updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("About.txt");
             }
         });
@@ -129,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                lStartTime = System.currentTimeMillis();
                 handler.post(runnable);
             }
         });
@@ -194,6 +221,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         readText("Tehillim.txt");
+        lBestTime = getBestTime(nType);
+        updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
     }
 
     private void readText(String filename) {
@@ -222,5 +251,69 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private long getBestTime(int type) {
+        long lTime = 0;
+        SharedPreferences shared = getSharedPreferences("time", 0);
+        switch (type) {
+            case 0:
+                if (shared.contains("Tehillim"))
+                    lTime = shared.getLong("Tehillim", lTime);
+                break;
+            case 1:
+                if (shared.contains("Hatikun"))
+                    lTime = shared.getLong("Hatikun", lTime);
+                break;
+            case 2:
+                if (shared.contains("Parashat"))
+                    lTime = shared.getLong("Parashat", lTime);
+                break;
+            case 3:
+                if (shared.contains("About"))
+                    lTime = shared.getLong("About", lTime);
+                break;
+            default:
+                break;
+        }
+
+
+        return lTime;
+    }
+
+    private void saveBestTime(int type, long lTime) {
+        SharedPreferences shared = getSharedPreferences("time", 0);
+        SharedPreferences.Editor editor = shared.edit();
+
+        switch (type) {
+            case 0:
+                editor.remove("Tehillim");
+                editor.putLong("Tehillim", lTime);
+                break;
+            case 1:
+                editor.remove("Hatikun");
+                editor.putLong("Hatikun", lTime);
+                break;
+            case 2:
+                editor.remove("Parashat");
+                editor.putLong("Parashat", lTime);
+                break;
+            case 3:
+                editor.remove("About");
+                editor.putLong("About", lTime);
+                break;
+            default:
+                break;
+        }
+
+        editor.commit();
+    }
+
+    private void updateStatus(int speed, int elapsed, int best) {
+        StringBuffer sbStatus = new StringBuffer();
+        sbStatus.append("Speed: " + speed + "\n");
+        sbStatus.append("Time: " + elapsed + "s\n");
+        sbStatus.append("Best: " + best + "s\n");
+        tvStatus.setText(sbStatus.toString());
     }
 }
