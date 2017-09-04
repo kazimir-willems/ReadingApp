@@ -8,6 +8,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText edtFontSize;
     private TextView tvStatus;
 
-    private ScrollView svContent;
+    private HorizontalScrollView svContent;
 
     private long lStartTime = 0;
     private long lBestTime = 0;
@@ -52,9 +53,9 @@ public class MainActivity extends AppCompatActivity {
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            svContent.smoothScrollTo(svContent.getScrollY(), svContent.getScrollY() + nSpeed);
+            svContent.smoothScrollTo(svContent.getScrollX() + nSpeed, 0);
 
-            int diff = (tvContent.getBottom() - (svContent.getHeight() + svContent.getScrollY()));
+            int diff = (tvContent.getRight() - (svContent.getWidth() + svContent.getScrollX()));
 
             // if diff is zero, then the bottom has been reached
             if (diff <= 0) {
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         edtFontSize = (EditText) findViewById(R.id.edt_font_size);
         tvStatus = (TextView) findViewById(R.id.tv_status);
 
-        svContent = (ScrollView) findViewById(R.id.sv_content);
+        svContent = (HorizontalScrollView) findViewById(R.id.sv_content);
         tvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                 nFontSize);
 
