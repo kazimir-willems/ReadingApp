@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -49,13 +50,23 @@ public class MainActivity extends AppCompatActivity {
     private static int nSpeed = 10;
     private static int nFontSize = 18;
 
+    private static boolean bScrollFlag = false; //false; left to right, true: right to left
+
     Handler handler = new Handler();
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            svContent.smoothScrollTo(svContent.getScrollX() + nSpeed, 0);
+            int diff = 0;
 
-            int diff = (tvContent.getRight() - (svContent.getWidth() + svContent.getScrollX()));
+            if(!bScrollFlag) {
+                svContent.smoothScrollTo(svContent.getScrollX() + nSpeed, 0);
+
+                diff = (tvContent.getRight() - (svContent.getWidth() + svContent.getScrollX()));
+            } else {
+                svContent.smoothScrollTo(svContent.getScrollX() - nSpeed, 0);
+
+                diff = svContent.getScrollX();
+            }
 
             // if diff is zero, then the bottom has been reached
             if (diff <= 0) {
@@ -109,11 +120,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 handler.removeMessages(0);
-                svContent.scrollTo(0, 0);
+                bScrollFlag = true;
                 nType = 0;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Tehillim.txt");
+                svContent.scrollTo(tvContent.getWidth(), 0);
             }
         });
 
@@ -121,11 +133,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 handler.removeMessages(0);
-                svContent.scrollTo(0, 0);
+                bScrollFlag = true;
                 nType = 1;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Hatikun.txt");
+                svContent.scrollTo(tvContent.getWidth(), 0);
             }
         });
 
@@ -133,11 +146,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 handler.removeMessages(0);
-                svContent.scrollTo(0, 0);
+                bScrollFlag = true;
                 nType = 2;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Parashat.txt");
+                svContent.scrollTo(tvContent.getWidth(), 0);
             }
         });
 
@@ -145,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 handler.removeMessages(0);
+                bScrollFlag = false;
                 svContent.scrollTo(0, 0);
                 nType = 3;
                 lBestTime = getBestTime(nType);
@@ -222,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         readText("Tehillim.txt");
+        svContent.scrollTo(tvContent.getWidth(), 0);
         lBestTime = getBestTime(nType);
         updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
     }
