@@ -1,6 +1,8 @@
 package luca.read.com;
 
+import android.app.ProgressDialog;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnTehllim;
     private Button btnHatikun;
     private Button btnParashat;
+    private Button btnPeek;
     private Button btnAbout;
 
     private Button btnPlay;
@@ -36,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnFontUp;
     private Button btnFontDown;
 
-    private EditText edtSpeed;
-    private EditText edtFontSize;
+    private TextView edtSpeed;
+    private TextView edtFontSize;
     private TextView tvStatus;
 
     private HorizontalScrollView svContent;
@@ -50,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private static int nSpeed = 10;
     private static int nFontSize = 18;
 
-    private static boolean bScrollFlag = false; //false; left to right, true: right to left
+    private static boolean bScrollFlag = true; //false; left to right, true: right to left
+    private ProgressDialog progressDialog;
 
     Handler handler = new Handler();
     Runnable runnable = new Runnable() {
@@ -97,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         btnTehllim = (Button) findViewById(R.id.btn_tehllim);
         btnHatikun = (Button) findViewById(R.id.btn_hatikkun);
         btnParashat = (Button) findViewById(R.id.btn_parshat);
+        btnPeek = (Button) findViewById(R.id.btn_peek);
         btnAbout = (Button) findViewById(R.id.btn_about);
 
         btnPlay = (Button) findViewById(R.id.btn_play);
@@ -108,13 +113,15 @@ public class MainActivity extends AppCompatActivity {
         btnFontUp = (Button) findViewById(R.id.btn_font_up);
         btnFontDown = (Button) findViewById(R.id.btn_font_down);
 
-        edtSpeed = (EditText) findViewById(R.id.edt_speed);
-        edtFontSize = (EditText) findViewById(R.id.edt_font_size);
+        edtSpeed = (TextView) findViewById(R.id.edt_speed);
+        edtFontSize = (TextView) findViewById(R.id.edt_font_size);
         tvStatus = (TextView) findViewById(R.id.tv_status);
 
         svContent = (HorizontalScrollView) findViewById(R.id.sv_content);
         tvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                 nFontSize);
+
+        progressDialog = new ProgressDialog(MainActivity.this);
 
         btnTehllim.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Tehillim.txt");
-                svContent.scrollTo(tvContent.getWidth(), 0);
+                moveScroll();
             }
         });
 
@@ -138,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Hatikun.txt");
-                svContent.scrollTo(tvContent.getWidth(), 0);
+                moveScroll();
             }
         });
 
@@ -151,7 +158,20 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Parashat.txt");
-                svContent.scrollTo(tvContent.getWidth(), 0);
+                moveScroll();
+            }
+        });
+
+        btnPeek.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                handler.removeMessages(0);
+                bScrollFlag = true;
+                nType = 2;
+                lBestTime = getBestTime(nType);
+                updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
+                readText("PeekShira.txt");
+                moveScroll();
             }
         });
 
@@ -236,10 +256,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        readText("Tehillim.txt");
-        svContent.scrollTo(tvContent.getWidth(), 0);
         lBestTime = getBestTime(nType);
         updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
+    }
+
+    private void moveScroll() {
+        Handler scrollHandler = new Handler();
+        Runnable scrollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                svContent.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+            }
+        };
+        scrollHandler.postDelayed(scrollRunnable, 100L);
+
     }
 
     private void readText(String filename) {
@@ -253,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
             String mLine;
             while ((mLine = reader.readLine()) != null) {
                 //process line
-                text = text + mLine + "\n";
+                text = text + mLine + " ";
             }
 
             tvContent.setText(text);
@@ -328,9 +358,41 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateStatus(int speed, int elapsed, int best) {
         StringBuffer sbStatus = new StringBuffer();
+        String elapsedTime = (elapsed / 60) + "m " + (elapsed % 60) + "s";
+        String bestTime = (best / 60) + "m " + (best % 60) + "s";
         sbStatus.append("Speed: " + speed + "\n");
-        sbStatus.append("Time: " + elapsed + "s\n");
-        sbStatus.append("Best: " + best + "s\n");
+        sbStatus.append("Time: " + elapsedTime + "\n");
+        sbStatus.append("Best: " + bestTime + "\n");
         tvStatus.setText(sbStatus.toString());
+    }
+
+    public class ShowContentTask extends AsyncTask<String, Void, Boolean> {
+
+//        ProgressDialog progressDialog;
+        MainActivity parent;
+
+        public ShowContentTask(MainActivity parent) {
+            this.parent = parent;
+        }
+
+        @Override
+        protected void onPreExecute() {
+//            progressDialog = new ProgressDialog(parent);
+//            progressDialog.setMessage("Loading...");
+//            progressDialog.show();
+        }
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            String filename = params[0];
+            readText(filename);
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            moveScroll();
+        }
     }
 }
