@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 nType = 0;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
-                readText("Tehillim.txt");
+                readText("Tehillim1.txt");
                 moveScroll();
             }
         });
@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         btnFontUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(nFontSize >= 100) {
+                if(nFontSize >= 60) {
                     return;
                 }
 
