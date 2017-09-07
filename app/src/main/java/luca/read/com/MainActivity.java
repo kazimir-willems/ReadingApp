@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private static int nSpeed = 10;
     private static int nFontSize = 18;
 
-    private final static int TEHILLIM_PARTS = 5;
+    private final static int TEHILLIM_PARTS = 15;
     private static int CURRENT_PART = 1;
 
     private static boolean bTehillim = false;
