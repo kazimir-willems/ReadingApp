@@ -9,9 +9,12 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     private static int nSpeed = 10;
     private static int nFontSize = 18;
 
+    private final static int TEHILLIM_PARTS = 5;
+    private static int CURRENT_PART = 1;
+
+    private static boolean bTehillim = false;
     private static boolean bScrollFlag = true; //false; left to right, true: right to left
     private ProgressDialog progressDialog;
 
@@ -73,19 +80,45 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // if diff is zero, then the bottom has been reached
-            if (diff <= 0) {
-                long lElapsedTime = System.currentTimeMillis() - lStartTime;
+            if(!bTehillim) {
+                if (diff <= 0) {
+                    long lElapsedTime = System.currentTimeMillis() - lStartTime;
 
-                if (lBestTime == 0 || lElapsedTime < lBestTime) {
-                    lBestTime = lElapsedTime;
-                    saveBestTime(nType, lBestTime);
+                    if (lBestTime == 0 || lElapsedTime < lBestTime) {
+                        lBestTime = lElapsedTime;
+                        saveBestTime(nType, lBestTime);
+                    }
+
+                    updateStatus(nSpeed, (int) (lElapsedTime / 1000), (int) (lBestTime / 1000));
+                    handler.removeMessages(0);
+                    Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
+
+                    return;
                 }
+            } else {
+                if(CURRENT_PART < TEHILLIM_PARTS) {
+                    if (diff <= tvContent.getWidth() / 20) {
+                        CURRENT_PART++;
 
-                updateStatus(nSpeed, (int)(lElapsedTime / 1000), (int)(lBestTime / 1000));
-                handler.removeMessages(0);
-                Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
+                        String filename = "Tehillim" + CURRENT_PART + ".txt";
+                        readText(filename);
+                    }
+                } else {
+                    if (diff <= 0) {
+                        long lElapsedTime = System.currentTimeMillis() - lStartTime;
 
-                return;
+                        if (lBestTime == 0 || lElapsedTime < lBestTime) {
+                            lBestTime = lElapsedTime;
+                            saveBestTime(nType, lBestTime);
+                        }
+
+                        updateStatus(nSpeed, (int) (lElapsedTime / 1000), (int) (lBestTime / 1000));
+                        handler.removeMessages(0);
+                        Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
+
+                        return;
+                    }
+                }
             }
 
             handler.postDelayed(this, SCROLL_INTERVAL);
@@ -128,11 +161,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 bScrollFlag = true;
+                bTehillim = true;
+                CURRENT_PART = 1;
                 nType = 0;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Tehillim1.txt");
-                moveScroll();
             }
         });
 
@@ -141,11 +175,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 bScrollFlag = true;
+                bTehillim = false;
                 nType = 1;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Hatikun.txt");
-                moveScroll();
             }
         });
 
@@ -154,11 +188,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 bScrollFlag = true;
+                bTehillim = false;
                 nType = 2;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Parashat.txt");
-                moveScroll();
             }
         });
 
@@ -167,11 +201,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 bScrollFlag = true;
+                bTehillim = false;
                 nType = 2;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("PeekShira.txt");
-                moveScroll();
             }
         });
 
@@ -180,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 handler.removeMessages(0);
                 bScrollFlag = false;
+                bTehillim = false;
                 svContent.scrollTo(0, 0);
                 nType = 3;
                 lBestTime = getBestTime(nType);
@@ -258,6 +293,8 @@ public class MainActivity extends AppCompatActivity {
 
         lBestTime = getBestTime(nType);
         updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
+
+        btnTehllim.performClick();
     }
 
     private void moveScroll() {
@@ -265,7 +302,11 @@ public class MainActivity extends AppCompatActivity {
         Runnable scrollRunnable = new Runnable() {
             @Override
             public void run() {
-                svContent.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+                if(bScrollFlag) {
+                    svContent.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+                } else {
+                    svContent.fullScroll(HorizontalScrollView.FOCUS_LEFT);
+                }
             }
         };
         scrollHandler.postDelayed(scrollRunnable, 100L);
@@ -298,6 +339,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+
+        moveScroll();
     }
 
     private long getBestTime(int type) {
@@ -366,33 +409,4 @@ public class MainActivity extends AppCompatActivity {
         tvStatus.setText(sbStatus.toString());
     }
 
-    public class ShowContentTask extends AsyncTask<String, Void, Boolean> {
-
-//        ProgressDialog progressDialog;
-        MainActivity parent;
-
-        public ShowContentTask(MainActivity parent) {
-            this.parent = parent;
-        }
-
-        @Override
-        protected void onPreExecute() {
-//            progressDialog = new ProgressDialog(parent);
-//            progressDialog.setMessage("Loading...");
-//            progressDialog.show();
-        }
-
-        @Override
-        protected Boolean doInBackground(String... params) {
-            String filename = params[0];
-            readText(filename);
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-            moveScroll();
-        }
-    }
 }
