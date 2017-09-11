@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/colorBurgundy"
     tools:context="luca.read.com.MainActivity">
 
     <LinearLayout
@@ -54,8 +55,22 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_horizontal"
-                        android:textColor="@color/colorBlack"
+                        android:textColor="@color/colorWhite"
                         android:text="10"/>
+
+                    <Button
+                        android:id="@+id/btn_scroll_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vertical"/>
+
+                    <TextView
+                        android:id="@+id/tv_scroll_mode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Mode:\nHorizontal"
+                        android:textColor="@color/colorWhite"/>
 
                 </LinearLayout>
             </LinearLayout>
@@ -96,7 +111,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:textColor="@color/colorBlack"
+                android:textColor="@color/colorWhite"
                 android:text="18"/>
 
             <Button
@@ -114,19 +129,37 @@
             <TextView
                 android:id="@+id/tv_status"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorWhite"/>
         </LinearLayout>
 
-        <HorizontalScrollView
-            android:id="@+id/sv_content"
+        <ScrollView
+            android:id="@+id/sv_vertical_content"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/tv_content"
+                android:id="@+id/tv_vertical_content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Select Text!"
+                android:textColor="@color/colorWhite"
+                android:layout_gravity="top"
+                android:includeFontPadding="false" />
+        </ScrollView>
+
+        <HorizontalScrollView
+            android:id="@+id/sv_horizontal_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tv_horizontal_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Text!"
+                android:textColor="@color/colorWhite"
                 android:layout_gravity="center_vertical"
                 android:singleLine="true"
                 android:includeFontPadding="false" />
@@ -169,7 +202,7 @@
                 android:id="@+id/btn_peek"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Peek Shira"/>
+                android:text="Perek Shira"/>
 
             <Button
                 android:id="@+id/btn_about"

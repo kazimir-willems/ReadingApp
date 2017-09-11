@@ -2,19 +2,13 @@ package luca.read.com;
 
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,7 +19,8 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvContent;
+    private TextView tvHorizontalContent;
+    private TextView tvVerticalContent;
 
     private Button btnTehllim;
     private Button btnHatikun;
@@ -33,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnPeek;
     private Button btnAbout;
 
+    private Button btnMode;
     private Button btnPlay;
     private Button btnPause;
 
@@ -44,9 +40,11 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView edtSpeed;
     private TextView edtFontSize;
+    private TextView tvMode;
     private TextView tvStatus;
 
-    private HorizontalScrollView svContent;
+    private HorizontalScrollView svHorizontalContent;
+    private ScrollView svVerticalContent;
 
     private long lStartTime = 0;
     private long lBestTime = 0;
@@ -61,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static boolean bTehillim = false;
     private static boolean bScrollFlag = true; //false; left to right, true: right to left
+    private static boolean bMode = false; //false; Horizontal, true: Vertical
     private ProgressDialog progressDialog;
 
     Handler handler = new Handler();
@@ -70,13 +69,13 @@ public class MainActivity extends AppCompatActivity {
             int diff = 0;
 
             if(!bScrollFlag) {
-                svContent.smoothScrollTo(svContent.getScrollX() + nSpeed, 0);
+                svHorizontalContent.smoothScrollTo(svHorizontalContent.getScrollX() + nSpeed, 0);
 
-                diff = (tvContent.getRight() - (svContent.getWidth() + svContent.getScrollX()));
+                diff = (tvHorizontalContent.getRight() - (svHorizontalContent.getWidth() + svHorizontalContent.getScrollX()));
             } else {
-                svContent.smoothScrollTo(svContent.getScrollX() - nSpeed, 0);
+                svHorizontalContent.smoothScrollTo(svHorizontalContent.getScrollX() - nSpeed, 0);
 
-                diff = svContent.getScrollX();
+                diff = svHorizontalContent.getScrollX();
             }
 
             // if diff is zero, then the bottom has been reached
@@ -93,11 +92,13 @@ public class MainActivity extends AppCompatActivity {
                     handler.removeMessages(0);
                     Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
+                    btnMode.setEnabled(true);
+
                     return;
                 }
             } else {
                 if(CURRENT_PART < TEHILLIM_PARTS) {
-                    if (diff <= tvContent.getWidth() / 20) {
+                    if (diff <= tvHorizontalContent.getWidth() / 20) {
                         CURRENT_PART++;
 
                         String filename = "Tehillim" + CURRENT_PART + ".txt";
@@ -125,18 +126,77 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    Handler verticalHandler = new Handler();
+    Runnable verticalRunnable = new Runnable() {
+        @Override
+        public void run() {
+            svVerticalContent.smoothScrollTo(svVerticalContent.getScrollY(), svVerticalContent.getScrollY() + nSpeed);
+
+            int diff = (tvVerticalContent.getBottom() - (svVerticalContent.getHeight() + svVerticalContent.getScrollY()));
+
+            // if diff is zero, then the bottom has been reached
+            if(!bTehillim) {
+                if (diff <= 0) {
+                    long lElapsedTime = System.currentTimeMillis() - lStartTime;
+
+                    if (lBestTime == 0 || lElapsedTime < lBestTime) {
+                        lBestTime = lElapsedTime;
+                        saveBestTime(nType, lBestTime);
+                    }
+
+                    updateStatus(nSpeed, (int) (lElapsedTime / 1000), (int) (lBestTime / 1000));
+                    handler.removeMessages(0);
+                    Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
+
+                    return;
+                }
+            } else {
+                if(CURRENT_PART < TEHILLIM_PARTS) {
+                    if (diff <= tvVerticalContent.getHeight() / 20) {
+                        CURRENT_PART++;
+
+                        String filename = "Tehillim" + CURRENT_PART + ".txt";
+                        readText(filename);
+                    }
+                } else {
+                    if (diff <= 0) {
+                        long lElapsedTime = System.currentTimeMillis() - lStartTime;
+
+                        if (lBestTime == 0 || lElapsedTime < lBestTime) {
+                            lBestTime = lElapsedTime;
+                            saveBestTime(nType, lBestTime);
+                        }
+
+                        updateStatus(nSpeed, (int) (lElapsedTime / 1000), (int) (lBestTime / 1000));
+                        handler.removeMessages(0);
+                        Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
+
+                        btnMode.setEnabled(true);
+
+                        return;
+                    }
+                }
+            }
+
+            handler.postDelayed(this, SCROLL_INTERVAL);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvContent = (TextView) findViewById(R.id.tv_content);
+        tvHorizontalContent = (TextView) findViewById(R.id.tv_horizontal_content);
+        tvVerticalContent = (TextView) findViewById(R.id.tv_vertical_content);
+
         btnTehllim = (Button) findViewById(R.id.btn_tehllim);
         btnHatikun = (Button) findViewById(R.id.btn_hatikkun);
         btnParashat = (Button) findViewById(R.id.btn_parshat);
         btnPeek = (Button) findViewById(R.id.btn_peek);
         btnAbout = (Button) findViewById(R.id.btn_about);
 
+        btnMode = (Button) findViewById(R.id.btn_scroll_mode);
         btnPlay = (Button) findViewById(R.id.btn_play);
         btnPause = (Button) findViewById(R.id.btn_pause);
 
@@ -149,12 +209,31 @@ public class MainActivity extends AppCompatActivity {
         edtSpeed = (TextView) findViewById(R.id.edt_speed);
         edtFontSize = (TextView) findViewById(R.id.edt_font_size);
         tvStatus = (TextView) findViewById(R.id.tv_status);
+        tvMode = (TextView) findViewById(R.id.tv_scroll_mode);
 
-        svContent = (HorizontalScrollView) findViewById(R.id.sv_content);
-        tvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
+        svHorizontalContent = (HorizontalScrollView) findViewById(R.id.sv_horizontal_content);
+        svVerticalContent = (ScrollView) findViewById(R.id.sv_vertical_content);
+        tvHorizontalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                 nFontSize);
+        tvVerticalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP, nFontSize);
 
-        progressDialog = new ProgressDialog(MainActivity.this);
+        btnMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                bMode = !bMode;
+                if(bMode) {
+                    btnMode.setText("Horizontal");
+                    tvMode.setText("Mode:\nVertical");
+                    svVerticalContent.setVisibility(View.VISIBLE);
+                    svHorizontalContent.setVisibility(View.GONE);
+                } else {
+                    btnMode.setText("Vertical");
+                    tvMode.setText("Mode:\nHorizontal");
+                    svVerticalContent.setVisibility(View.GONE);
+                    svHorizontalContent.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
         btnTehllim.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -215,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.removeMessages(0);
                 bScrollFlag = false;
                 bTehillim = false;
-                svContent.scrollTo(0, 0);
+                svHorizontalContent.scrollTo(0, 0);
                 nType = 3;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
@@ -227,7 +306,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 lStartTime = System.currentTimeMillis();
-                handler.post(runnable);
+                if(!bMode) {
+                    handler.post(runnable);
+                    btnMode.setEnabled(false);
+                } else {
+                    verticalHandler.post(verticalRunnable);
+                    btnMode.setEnabled(false);
+                }
             }
         });
 
@@ -235,6 +320,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 handler.removeMessages(0);
+                verticalHandler.removeMessages(0);
+
+                btnMode.setEnabled(true);
             }
         });
 
@@ -247,7 +335,9 @@ public class MainActivity extends AppCompatActivity {
 
                 nFontSize++;
                 edtFontSize.setText(String.valueOf(nFontSize));
-                tvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
+                tvHorizontalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
+                        nFontSize);
+                tvVerticalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                         nFontSize);
             }
         });
@@ -262,7 +352,9 @@ public class MainActivity extends AppCompatActivity {
                 nFontSize--;
 
                 edtFontSize.setText(String.valueOf(nFontSize));
-                tvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
+                tvHorizontalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
+                        nFontSize);
+                tvVerticalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                         nFontSize);
             }
         });
@@ -302,10 +394,14 @@ public class MainActivity extends AppCompatActivity {
         Runnable scrollRunnable = new Runnable() {
             @Override
             public void run() {
-                if(bScrollFlag) {
-                    svContent.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+                if(bMode) {
+                    svVerticalContent.scrollTo(0, 0);
                 } else {
-                    svContent.fullScroll(HorizontalScrollView.FOCUS_LEFT);
+                    if (bScrollFlag) {
+                        svHorizontalContent.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+                    } else {
+                        svHorizontalContent.fullScroll(HorizontalScrollView.FOCUS_LEFT);
+                    }
                 }
             }
         };
@@ -324,10 +420,11 @@ public class MainActivity extends AppCompatActivity {
             String mLine;
             while ((mLine = reader.readLine()) != null) {
                 //process line
-                text = text + mLine + " ";
+                text = text + mLine + "\n";
             }
 
-            tvContent.setText(text);
+            tvHorizontalContent.setText(text);
+            tvVerticalContent.setText(text);
         } catch (IOException e) {
             //log the exception
         } finally {
