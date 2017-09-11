@@ -117,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
                         handler.removeMessages(0);
                         Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
+                        btnMode.setEnabled(true);
+
                         return;
                     }
                 }
@@ -148,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
                     handler.removeMessages(0);
                     Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
+                    btnMode.setEnabled(true);
                     return;
                 }
             } else {
@@ -186,6 +189,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences shared = getSharedPreferences("time", 0);
+        if (shared.contains("speed"))
+            nSpeed = shared.getInt("speed", 10);
+        if (shared.contains("font"))
+            nFontSize = shared.getInt("font", 18);
 
         tvHorizontalContent = (TextView) findViewById(R.id.tv_horizontal_content);
         tvVerticalContent = (TextView) findViewById(R.id.tv_vertical_content);
@@ -334,6 +343,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 nFontSize++;
+
+                SharedPreferences shared = getSharedPreferences("time", 0);
+                SharedPreferences.Editor editor = shared.edit();
+                editor.remove("font");
+                editor.putInt("font", nFontSize);
+
+                editor.commit();
                 edtFontSize.setText(String.valueOf(nFontSize));
                 tvHorizontalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                         nFontSize);
@@ -350,7 +366,12 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 nFontSize--;
+                SharedPreferences shared = getSharedPreferences("time", 0);
+                SharedPreferences.Editor editor = shared.edit();
+                editor.remove("font");
+                editor.putInt("font", nFontSize);
 
+                editor.commit();
                 edtFontSize.setText(String.valueOf(nFontSize));
                 tvHorizontalContent.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                         nFontSize);
@@ -366,7 +387,12 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 nSpeed++;
+                SharedPreferences shared = getSharedPreferences("time", 0);
+                SharedPreferences.Editor editor = shared.edit();
+                editor.remove("speed");
+                editor.putInt("speed", nSpeed);
 
+                editor.commit();
                 edtSpeed.setText(String.valueOf(nSpeed));
             }
         });
@@ -378,10 +404,18 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 nSpeed--;
+                SharedPreferences shared = getSharedPreferences("time", 0);
+                SharedPreferences.Editor editor = shared.edit();
+                editor.remove("speed");
+                editor.putInt("speed", nSpeed);
 
+                editor.commit();
                 edtSpeed.setText(String.valueOf(nSpeed));
             }
         });
+
+        edtFontSize.setText(String.valueOf(nFontSize));
+        edtSpeed.setText(String.valueOf(nSpeed));
 
         lBestTime = getBestTime(nType);
         updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
