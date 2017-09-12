@@ -136,6 +136,7 @@
         <ScrollView
             android:id="@+id/sv_vertical_content"
             android:visibility="gone"
+            android:scrollbarThumbVertical="@color/colorWhite"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -151,6 +152,7 @@
 
         <HorizontalScrollView
             android:id="@+id/sv_horizontal_content"
+            android:scrollbarThumbHorizontal="@color/colorWhite"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
