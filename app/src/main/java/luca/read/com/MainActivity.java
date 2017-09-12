@@ -195,6 +195,8 @@ public class MainActivity extends AppCompatActivity {
             nSpeed = shared.getInt("speed", 10);
         if (shared.contains("font"))
             nFontSize = shared.getInt("font", 18);
+        if (shared.contains("mode"))
+            bMode = shared.getBoolean("mode", false);
 
         tvHorizontalContent = (TextView) findViewById(R.id.tv_horizontal_content);
         tvVerticalContent = (TextView) findViewById(R.id.tv_vertical_content);
@@ -235,11 +237,25 @@ public class MainActivity extends AppCompatActivity {
                     tvMode.setText("Mode:\nVertical");
                     svVerticalContent.setVisibility(View.VISIBLE);
                     svHorizontalContent.setVisibility(View.GONE);
+
+                    SharedPreferences shared = getSharedPreferences("time", 0);
+                    SharedPreferences.Editor editor = shared.edit();
+                    editor.remove("mode");
+                    editor.putBoolean("mode", bMode);
+
+                    editor.commit();
                 } else {
                     btnMode.setText("Vertical");
                     tvMode.setText("Mode:\nHorizontal");
                     svVerticalContent.setVisibility(View.GONE);
                     svHorizontalContent.setVisibility(View.VISIBLE);
+
+                    SharedPreferences shared = getSharedPreferences("time", 0);
+                    SharedPreferences.Editor editor = shared.edit();
+                    editor.remove("mode");
+                    editor.putBoolean("mode", bMode);
+
+                    editor.commit();
                 }
             }
         });
@@ -414,6 +430,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        if(bMode) {
+            btnMode.setText("Horizontal");
+            tvMode.setText("Mode:\nVertical");
+            svVerticalContent.setVisibility(View.VISIBLE);
+            svHorizontalContent.setVisibility(View.GONE);
+        } else {
+            btnMode.setText("Vertical");
+            tvMode.setText("Mode:\nHorizontal");
+            svVerticalContent.setVisibility(View.GONE);
+            svHorizontalContent.setVisibility(View.VISIBLE);
+        }
+
         edtFontSize.setText(String.valueOf(nFontSize));
         edtSpeed.setText(String.valueOf(nSpeed));
 
@@ -428,15 +456,15 @@ public class MainActivity extends AppCompatActivity {
         Runnable scrollRunnable = new Runnable() {
             @Override
             public void run() {
-                if(bMode) {
+//                if(bMode) {
                     svVerticalContent.scrollTo(0, 0);
-                } else {
+//                } else {
                     if (bScrollFlag) {
                         svHorizontalContent.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
                     } else {
                         svHorizontalContent.fullScroll(HorizontalScrollView.FOCUS_LEFT);
                     }
-                }
+//                }
             }
         };
         scrollHandler.postDelayed(scrollRunnable, 100L);
