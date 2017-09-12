@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
                     btnMode.setEnabled(true);
-
+                    btnPlay.setEnabled(true);
                     return;
                 }
             } else {
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
                         btnMode.setEnabled(true);
-
+                        btnPlay.setEnabled(true);
                         return;
                     }
                 }
@@ -151,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
                     btnMode.setEnabled(true);
+                    btnPlay.setEnabled(true);
                     return;
                 }
             } else {
@@ -175,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "End", Toast.LENGTH_SHORT).show();
 
                         btnMode.setEnabled(true);
+                        btnPlay.setEnabled(true);
 
                         return;
                     }
@@ -338,6 +340,8 @@ public class MainActivity extends AppCompatActivity {
                     verticalHandler.post(verticalRunnable);
                     btnMode.setEnabled(false);
                 }
+
+                btnPlay.setEnabled(false);
             }
         });
 
@@ -348,6 +352,7 @@ public class MainActivity extends AppCompatActivity {
                 verticalHandler.removeMessages(0);
 
                 btnMode.setEnabled(true);
+                btnPlay.setEnabled(true);
             }
         });
 
