@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int TEHILLIM_PARTS = 15;
     private static int CURRENT_PART = 1;
 
+    private static boolean bPlaying = false;
     private static boolean bTehillim = false;
     private static boolean bScrollFlag = true; //false; left to right, true: right to left
     private static boolean bMode = false; //false; Horizontal, true: Vertical
@@ -103,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
                     btnMode.setEnabled(true);
                     btnPlay.setEnabled(true);
+                    bPlaying = false;
                     return;
                 }
             } else {
@@ -129,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
                         btnMode.setEnabled(true);
                         btnPlay.setEnabled(true);
+                        bPlaying = false;
                         return;
                     }
                 }
@@ -163,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
                     btnMode.setEnabled(true);
                     btnPlay.setEnabled(true);
+                    bPlaying = false;
                     return;
                 }
             } else {
@@ -189,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
 
                         btnMode.setEnabled(true);
                         btnPlay.setEnabled(true);
+                        bPlaying = false;
 
                         return;
                     }
@@ -334,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.removeMessages(0);
                 bScrollFlag = true;
                 bTehillim = false;
-                nType = 2;
+                nType = 3;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("PeekShira.txt");
@@ -350,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
                 bScrollFlag = false;
                 bTehillim = false;
                 svHorizontalContent.scrollTo(0, 0);
-                nType = 3;
+                nType = 4;
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("About.txt");
@@ -372,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 btnPlay.setEnabled(false);
+                bPlaying = true;
             }
         });
 
@@ -385,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
 
                 btnMode.setEnabled(true);
                 btnPlay.setEnabled(true);
+                bPlaying = false;
             }
         });
 
@@ -495,21 +502,47 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putBoolean("current_state", bMode);
+    public void onPause() {
+        super.onPause();
 
-        if(bMode) {
-            savedInstanceState.putInt("current_pos", svHorizontalContent.getScrollX());
-            savedInstanceState.putLong("current_elapsed", lEstimateTime);
+        btnPause.performClick();
 
+        /*if (!bMode) {
+            handler.removeMessages(0);
         } else {
-            savedInstanceState.putInt("current_pos", svVerticalContent.getScrollY());
-            savedInstanceState.putLong("current_elapsed", lEstimateTime);
-        }
+            verticalHandler.removeMessages(0);
+        }*/
     }
 
-    @Override
+    /*@Override
+    public void onResume() {
+        super.onResume();
+        SharedPreferences shared = getSharedPreferences("time", 0);
+        bPlaying = shared.getBoolean("playing", false);
+        if(bPlaying) {
+            bMode = shared.getBoolean("current_state", false);
+            int currentPos = shared.getInt("current_pos", 0);
+            if (!bMode) {
+                svHorizontalContent.setVisibility(View.VISIBLE);
+                svVerticalContent.setVisibility(View.GONE);
+
+                svHorizontalContent.smoothScrollTo(currentPos, 0);
+            } else {
+                svHorizontalContent.setVisibility(View.GONE);
+                svVerticalContent.setVisibility(View.VISIBLE);
+
+                svVerticalContent.smoothScrollTo(currentPos, currentPos);
+            }
+        }
+    }*/
+
+    /*@Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+
+    }*/
+
+    /*@Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
@@ -526,7 +559,7 @@ public class MainActivity extends AppCompatActivity {
 
             svVerticalContent.smoothScrollTo(currentPos, currentPos);
         }
-    }
+    }*/
 
     private void moveScroll() {
         Handler scrollHandler = new Handler();
@@ -544,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
 //                }
             }
         };
-        scrollHandler.postDelayed(scrollRunnable, 100L);
+        scrollHandler.postDelayed(scrollRunnable, 200L);
 
     }
 
@@ -596,6 +629,10 @@ public class MainActivity extends AppCompatActivity {
                     lTime = shared.getLong("Parashat", lTime);
                 break;
             case 3:
+                if (shared.contains("Perek"))
+                    lTime = shared.getLong("Perek", lTime);
+                break;
+            case 4:
                 if (shared.contains("About"))
                     lTime = shared.getLong("About", lTime);
                 break;
@@ -625,6 +662,10 @@ public class MainActivity extends AppCompatActivity {
                 editor.putLong("Parashat", lTime);
                 break;
             case 3:
+                editor.remove("Perek");
+                editor.putLong("Perek", lTime);
+                break;
+            case 4:
                 editor.remove("About");
                 editor.putLong("About", lTime);
                 break;
