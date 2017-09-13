@@ -1,12 +1,15 @@
 package luca.read.com;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
@@ -50,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private long lBestTime = 0;
     private int nType = 0;
 
+    private long lEstimateTime = 0;
+
     private static int SCROLL_INTERVAL = 20;
     private static int nSpeed = 10;
     private static int nFontSize = 18;
@@ -61,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
     private static boolean bScrollFlag = true; //false; left to right, true: right to left
     private static boolean bMode = false; //false; Horizontal, true: Vertical
     private ProgressDialog progressDialog;
+
+    protected PowerManager.WakeLock mWakeLock;
+
 
     Handler handler = new Handler();
     Runnable runnable = new Runnable() {
@@ -82,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
             if(!bTehillim) {
                 if (diff <= 0) {
                     long lElapsedTime = System.currentTimeMillis() - lStartTime;
+                    lElapsedTime = lElapsedTime + lEstimateTime;
 
                     if (lBestTime == 0 || lElapsedTime < lBestTime) {
                         lBestTime = lElapsedTime;
@@ -107,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     if (diff <= 0) {
                         long lElapsedTime = System.currentTimeMillis() - lStartTime;
+                        lElapsedTime = lElapsedTime + lEstimateTime;
 
                         if (lBestTime == 0 || lElapsedTime < lBestTime) {
                             lBestTime = lElapsedTime;
@@ -140,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
             if(!bTehillim) {
                 if (diff <= 0) {
                     long lElapsedTime = System.currentTimeMillis() - lStartTime;
+                    lElapsedTime = lElapsedTime + lEstimateTime;
 
                     if (lBestTime == 0 || lElapsedTime < lBestTime) {
                         lBestTime = lElapsedTime;
@@ -165,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     if (diff <= 0) {
                         long lElapsedTime = System.currentTimeMillis() - lStartTime;
+                        lElapsedTime = lElapsedTime + lEstimateTime;
 
                         if (lBestTime == 0 || lElapsedTime < lBestTime) {
                             lBestTime = lElapsedTime;
@@ -191,6 +203,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+        this.mWakeLock.acquire();
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         SharedPreferences shared = getSharedPreferences("time", 0);
         if (shared.contains("speed"))
@@ -259,6 +277,8 @@ public class MainActivity extends AppCompatActivity {
 
                     editor.commit();
                 }
+
+                lEstimateTime = 0L;
             }
         });
 
@@ -273,6 +293,8 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Tehillim1.txt");
+
+                lEstimateTime = 0L;
             }
         });
 
@@ -286,6 +308,8 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Hatikun.txt");
+
+                lEstimateTime = 0L;
             }
         });
 
@@ -299,6 +323,8 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("Parashat.txt");
+
+                lEstimateTime = 0L;
             }
         });
 
@@ -312,6 +338,8 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("PeekShira.txt");
+
+                lEstimateTime = 0L;
             }
         });
 
@@ -326,6 +354,8 @@ public class MainActivity extends AppCompatActivity {
                 lBestTime = getBestTime(nType);
                 updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
                 readText("About.txt");
+
+                lEstimateTime = 0L;
             }
         });
 
@@ -351,6 +381,8 @@ public class MainActivity extends AppCompatActivity {
                 handler.removeMessages(0);
                 verticalHandler.removeMessages(0);
 
+                lEstimateTime += System.currentTimeMillis() - lStartTime;
+
                 btnMode.setEnabled(true);
                 btnPlay.setEnabled(true);
             }
@@ -359,7 +391,7 @@ public class MainActivity extends AppCompatActivity {
         btnFontUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(nFontSize >= 60) {
+                if(nFontSize >= 70) {
                     return;
                 }
 
@@ -454,6 +486,46 @@ public class MainActivity extends AppCompatActivity {
         updateStatus(nSpeed, 0, (int)(lBestTime / 1000));
 
         btnTehllim.performClick();
+    }
+
+    @Override
+    public void onDestroy() {
+        this.mWakeLock.release();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean("current_state", bMode);
+
+        if(bMode) {
+            savedInstanceState.putInt("current_pos", svHorizontalContent.getScrollX());
+            savedInstanceState.putLong("current_elapsed", lEstimateTime);
+
+        } else {
+            savedInstanceState.putInt("current_pos", svVerticalContent.getScrollY());
+            savedInstanceState.putLong("current_elapsed", lEstimateTime);
+        }
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        bMode = savedInstanceState.getBoolean("current_state");
+        int currentPos = savedInstanceState.getInt("current_pos");
+        if(bMode) {
+            svHorizontalContent.setVisibility(View.VISIBLE);
+            svVerticalContent.setVisibility(View.GONE);
+
+            svHorizontalContent.smoothScrollTo(currentPos, 0);
+        } else {
+            svHorizontalContent.setVisibility(View.GONE);
+            svVerticalContent.setVisibility(View.VISIBLE);
+
+            svVerticalContent.smoothScrollTo(currentPos, currentPos);
+        }
     }
 
     private void moveScroll() {
